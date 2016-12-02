@@ -4,7 +4,7 @@ import re
 
 #todo: utf8 all input values
 
-def _urljoin(parts, params=None):
+def urljoin(parts, params=None):
     url = '/'.join(part.strip('/') for part in parts)
     if not params:
         return url
@@ -15,7 +15,7 @@ def _get_http_status(status_line):
     m = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', status_line)
     return m.groups(1)[0] if m else ''
 
-def _http_get(url, accept, auth_token=None):
+def http_get(url, accept, auth_token=None):
     request_headers = ['Accept: ' + accept]
     if auth_token:
         request_headers.append('Authorization-Token: ' + auth_token)
@@ -33,7 +33,7 @@ def _http_get(url, accept, auth_token=None):
     status_line = _get_http_status(header.getvalue().splitlines()[0])
     return (status_code, status_line, response_body.getvalue())
 
-def _http_post(url, content_type, body, accept, auth_token=None):
+def http_post(url, content_type, body, accept, auth_token=None):
     request_headers = ['Content-Type: ' + content_type, 'Accept: ' + accept]
     if auth_token:
         request_headers.append('Authorization-Token: ' + str(auth_token))
@@ -52,7 +52,7 @@ def _http_post(url, content_type, body, accept, auth_token=None):
     status_line = _get_http_status(header.getvalue().splitlines()[0])
     return (status_code, status_line, response_body.getvalue())
 
-def _http_upload_filepath(url, filepath, content_type, alternate_filename = None):
+def http_upload_filepath(url, filepath, content_type, alternate_filename = None):
     response_body = StringIO()
     header = StringIO()
     c = pycurl.Curl()
@@ -70,7 +70,7 @@ def _http_upload_filepath(url, filepath, content_type, alternate_filename = None
     status_line = _get_http_status(header.getvalue().splitlines()[0])
     return (status_code, status_line, response_body.getvalue())
 
-def _http_upload_raw_stream(url, stream, content_type, filename, filesize):
+def http_upload_raw_stream(url, stream, content_type, filename, filesize):
     response_body = StringIO()
     header = StringIO()
     c = pycurl.Curl()
