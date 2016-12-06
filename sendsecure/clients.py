@@ -4,18 +4,17 @@ import os
 from .utils import *
 from .helpers import *
 
-#todo: utf8 all input values
-
 class SendSecureException(Exception):
-    def __init__(self, code, message):
+    def __init__(self, code, message, details):
         self.code = code
         self.message = message
+        self.details = details
     def __str__(self):
         return str(self.code) + ': ' + self.message
 
 class UnexpectedServerResponseException(SendSecureException):
-    def __init__(self, code, message):
-        SendSecureException.__init__(self, code, message)
+    def __init__(self, code, message, details):
+        SendSecureException.__init__(self, code, message, details)
 
 class JsonClient:
     def __init__(self, api_token, enterprise_account, endpoint='https://portal.xmedius.com', locale='en'):
@@ -43,7 +42,7 @@ class JsonClient:
         else:
             (status_code, status_line, response_body) = http_upload_raw_stream(str(upload_url), source, content_type, filename, filesize)
         if status_code >= 400:
-            raise SendSecureException(status_code, status_line)
+            raise SendSecureException(status_code, status_line, response_body)
         return response_body
 
     def commit_safebox(self, safebox_json):
@@ -70,32 +69,34 @@ class JsonClient:
     def _do_get(self, url, accept):
         (status_code, status_line, response_body) = http_get(url, accept, self.api_token)
         if status_code >= 400:
-            raise SendSecureException(status_code, status_line)
+            raise SendSecureException(status_code, status_line, response_body)
         return response_body
 
     def _do_post(self, url, content_type, body, accept):
         (status_code, status_line, response_body) = http_post(url, content_type, body, accept, self.api_token)
         if status_code >= 400:
-            raise SendSecureException(status_code, status_line)
+            raise SendSecureException(status_code, status_line, response_body)
         return response_body
 
 
 class Client:
     @staticmethod
-    def get_user_token(enterprise_account, username, password, endpoint='https://portal.xmedius.com', otp=''):
+    def get_user_token(enterprise_account, username, password, device_id, device_name,
+        application_type='SendSecure Python', endpoint='https://portal.xmedius.com', one_time_password=''):
         url = urljoin([endpoint, 'services', enterprise_account, 'portal/host'])
         (status_code, status_line, response_body) = http_get(url, 'text/plain')
         if status_code >= 400:
-            raise SendSecureException(status_code, status_line)
+            raise SendSecureException(status_code, status_line, response_body)
 
         url = urljoin([response_body, 'api/user_token'])
         post_params = {
             'permalink': enterprise_account,
             'username': username,
             'password': password,
-            'application_type': 'SendSecure Python',
-            'device_id': 'device_id',
-            'device_name': 'systemtest'
+            'application_type': application_type,
+            'device_id': device_id,
+            'device_name': device_name,
+            'otp': one_time_password
         }
         (status_code, status_line, response_body) = http_post(url, 'application/json', json.dumps(post_params), 'application/json')
         if status_code >= 400:
@@ -107,13 +108,13 @@ class Client:
                 error_message = j['message']
             except:
                 pass
-            raise SendSecureException(error_code, error_message)
+            raise SendSecureException(error_code, error_message, response_body)
 
         try:
             j = json.loads(response_body)
             return j['token']
         except:
-            raise UnexpectedServerResponseException(500, 'Unexpected Error')
+            raise UnexpectedServerResponseException(500, 'Unexpected Error', '')
 
     def __init__(self, api_token, enterprise_account, endpoint='https://portal.xmedius.com', locale='en'):
         self.json_client = JsonClient(api_token, enterprise_account, endpoint, locale)

@@ -1,7 +1,5 @@
 import json
 
-#todo: utf8 all input values
-
 class _Enum:
     def __init__(self, values):
         for item in values.items():

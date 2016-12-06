@@ -2,8 +2,6 @@ import pycurl
 from StringIO import StringIO
 import re
 
-#todo: utf8 all input values
-
 def urljoin(parts, params=None):
     url = '/'.join(part.strip('/') for part in parts)
     if not params:
