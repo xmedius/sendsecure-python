@@ -1,6 +1,14 @@
 import pycurl
 from StringIO import StringIO
 import re
+import os
+import platform
+
+def _get_cacert_path():
+    if platform.system().lower() == 'windows':
+        #use the package cacert file that contains more recent cacerts
+        return os.path.dirname(__file__) + '\\cacert.pem'
+    return None
 
 def urljoin(parts, params=None):
     url = '/'.join(part.strip('/') for part in parts)
@@ -25,6 +33,9 @@ def http_get(url, accept, auth_token=None):
     c.setopt(c.HEADERFUNCTION, header.write)
     if request_headers:
         c.setopt(c.HTTPHEADER, request_headers)
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
@@ -44,6 +55,9 @@ def http_post(url, content_type, body, accept, auth_token=None):
     c.setopt(c.HEADERFUNCTION, header.write)
     c.setopt(c.HTTPHEADER, request_headers)
     c.setopt(c.POSTFIELDS, body)
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
@@ -62,6 +76,9 @@ def http_upload_filepath(url, filepath, content_type, alternate_filename = None)
         c.setopt(c.HTTPPOST, [("file", (c.FORM_FILE, filepath, c.FORM_CONTENTTYPE, content_type, c.FORM_FILENAME, alternate_filename))])
     else:
         c.setopt(c.HTTPPOST, [("file", (c.FORM_FILE, filepath, c.FORM_CONTENTTYPE, content_type))])
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
@@ -78,6 +95,9 @@ def http_upload_raw_stream(url, stream, content_type, filename, filesize):
     c.setopt(c.HEADERFUNCTION, header.write)
     c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename="' + filename + '"', 'Content-Length: ' + str(filesize)])
     c.setopt(c.READFUNCTION, stream.read)
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
