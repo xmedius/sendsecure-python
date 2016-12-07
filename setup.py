@@ -14,6 +14,7 @@ setup(
         'Programming Language :: Python :: 3.5'
     ],
     packages=['sendsecure'],
+    package_data={'sendsecure': ['cacert.pem']},
     install_requires=['pycurl']
 )
 
