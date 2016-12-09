@@ -17,8 +17,12 @@ def urljoin(parts, params=None):
     url_params = [p[0] + '=' + str(p[1]) for p in params.items()]
     return url + '?' + '&'.join(url_params)
 
-def _get_http_status(status_line):
-    m = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', status_line)
+def _get_http_status(status_lines):
+    last_status_line = status_lines[0]
+    for line in status_lines:
+        if line.startswith('HTTP/'):
+            last_status_line = line
+    m = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', last_status_line)
     return m.groups(1)[0] if m else ''
 
 def http_get(url, accept, auth_token=None):
@@ -39,7 +43,7 @@ def http_get(url, accept, auth_token=None):
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
-    status_line = _get_http_status(header.getvalue().splitlines()[0])
+    status_line = _get_http_status(header.getvalue().splitlines())
     return (status_code, status_line, response_body.getvalue())
 
 def http_post(url, content_type, body, accept, auth_token=None):
@@ -61,7 +65,7 @@ def http_post(url, content_type, body, accept, auth_token=None):
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
-    status_line = _get_http_status(header.getvalue().splitlines()[0])
+    status_line = _get_http_status(header.getvalue().splitlines())
     return (status_code, status_line, response_body.getvalue())
 
 def http_upload_filepath(url, filepath, content_type, alternate_filename = None):
@@ -82,7 +86,7 @@ def http_upload_filepath(url, filepath, content_type, alternate_filename = None)
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
-    status_line = _get_http_status(header.getvalue().splitlines()[0])
+    status_line = _get_http_status(header.getvalue().splitlines())
     return (status_code, status_line, response_body.getvalue())
 
 def http_upload_raw_stream(url, stream, content_type, filename, filesize):
@@ -101,5 +105,5 @@ def http_upload_raw_stream(url, stream, content_type, filename, filesize):
     c.perform()
     status_code = c.getinfo(pycurl.HTTP_CODE)
     c.close()
-    status_line = _get_http_status(header.getvalue().splitlines()[0])
+    status_line = _get_http_status(header.getvalue().splitlines())
     return (status_code, status_line, response_body.getvalue())
