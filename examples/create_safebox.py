@@ -12,7 +12,7 @@ if __name__ == "__main__":
          safebox.message = 'Son, you will find attached the evidence.'
 
          recipient = Recipient('lukeskywalker@rebels.com')
-         recipient.contact_methods.append(ContactMethod('514-555-0199'))
+         recipient.contact_methods.append(ContactMethod('555-232-5334'))
          safebox.recipients.append(recipient);
 
          attachment = Attachment('Birth_Certificate.pdf', 'application/pdf');

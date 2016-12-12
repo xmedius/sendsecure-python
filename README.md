@@ -39,7 +39,7 @@ With this library, you will be able to:
 ## Install Package
 
 ```python
-TBD
+pip install https://github.com/xmedius/sendsecure-python/tarball/master
 ```
 
 <a name="quickstart"></a>
@@ -51,47 +51,59 @@ Authentication is done using an API Token, which must be first obtained based on
 Here is the minimum code to get such a user-based API Token.
 
 ```python
-from SendSecure import *
-endpoint = 'https://portal.xmedius.com'
-token = Client.get_user_token('deathstar', 'darthvader', 'd@Rk$1De', endpoint)
-```
+from sendsecure import Client
 
-## SafeBox Creation
-
-Here is the minimum required code to create a SafeBox – with 1 recipient, a subject, a message and 1 attachment.
-This example uses the user's *default* security profile (which requires to be set in the account).
-
-### With SafeBox Helper Class
-
-```python
+if __name__ == "__main__":
     try:
-        user_email = 'darthvader@empire.com'
-        token = 'USER|e0c1cf59-c047-4545-9d6f-bb810b36ae4f'
         enterprise_account = 'deathstar'
+        username = 'darthvader'
+        password = 'd@Rk$1De'
+
+        device_id = 'DV-TIE/x1'
+        device_name = 'TIE Advanced x1'
+        application_type = 'The Force App'
         endpoint = 'https://portal.xmedius.com'
 
-        safebox = Safebox(user_email)
-        safebox.subject = 'Family matters'
-        safebox.message = 'Son, you will find attached the evidence.'
-
-        recipient = Recipient('lukeskywalker@rebels.com')
-        safebox.recipients.append(recipient)
-
-        attachment = Attachment('Birth_Certificate.pdf', 'application/pdf')
-        safebox.attachments.append(attachment)
-
-        client = Client(token, enterprise_account, endpoint)
-        safebox_response = client.submit_safebox(safebox)
+        token = Client.get_user_token(enterprise_account, username, password,
+            device_id, device_name, application_type, endpoint)
+        print 'User token:', token
     except Exception, details:
         print details
 ```
 
-<!-- ### Without SafeBox Helper Class
+## SafeBox Creation (Using SafeBox Helper Class)
+
+Here is the minimum required code to create a SafeBox – with 1 recipient, a subject, a message and 1 attachment.
+This example uses the user's *default* security profile (which requires to be set in the account).
 
 ```python
-TBD
+from sendsecure import Safebox, Recipient, ContactMethod, Attachment, Client
+
+if __name__ == "__main__":
+    try:
+         user_email = 'darthvader@empire.com'
+         token = 'USER|1d495165-4953-4457-8b5b-4fcf801e621a'
+         enterprise_account = 'deathstar'
+         endpoint = 'https://portal.xmedius.com'
+
+         safebox = Safebox(user_email)
+         safebox.subject = 'Family matters'
+         safebox.message = 'Son, you will find attached the evidence.'
+
+         recipient = Recipient('lukeskywalker@rebels.com')
+         recipient.contact_methods.append(ContactMethod('555-232-5334'))
+         safebox.recipients.append(recipient);
+
+         attachment = Attachment('Birth_Certificate.pdf', 'application/pdf');
+         safebox.attachments.append(attachment);
+
+         client = Client(token, enterprise_account, endpoint);
+         safe_response = client.submit_safebox(safebox);
+         print 'SafeBox ID:', safe_response.guid
+    except Exception, details:
+        print details
 ```
- -->
+
 <a name="usage"></a>
 # Usage
 
