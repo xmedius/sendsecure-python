@@ -116,115 +116,210 @@ get_user_token(enterprise_account, username, password, device_id, device_name, a
 Creates and returns an API Token for a specific user within a SendSecure enterprise account.
 Calling this method again with the exact same params will always return the same Token.
 
-Param              | Type   | Definition
--------------------|--------|-----------
-enterprise_account | String | The SendSecure enterprise account
-username           | String | The username of a SendSecure user of the current enterprise account
-password           | String | The password of this user
-device_id          | String | The unique ID of the device used to get the Token 
-device_name        | String | The name of the device used to get the Token
-application_type   | String | The type/name of the application used to get the Token ("SendSecure Python" will be used by default if empty)
-endpoint           | String | The URL to the SendSecure service ("https://portal.xmedius.com" will be used by default if empty)
-one_time_password  | String | The one-time password of this user (if any)
+Param              | Definition
+-------------------|-----------
+enterprise_account | The SendSecure enterprise account
+username           | The username of a SendSecure user of the current enterprise account
+password           | The password of this user
+device_id          | The unique ID of the device used to get the Token 
+device_name        | The name of the device used to get the Token
+application_type   | The type/name of the application used to get the Token ("SendSecure Python" will be used by default if empty)
+endpoint           | The URL to the SendSecure service ("https://portal.xmedius.com" will be used by default if empty)
+one_time_password  | The one-time password of this user (if any)
 
 ### Client Object Constructor
 ```
-__init__(self, api_token, enterprise_account, endpoint, locale)
+Client(api_token, enterprise_account, endpoint, locale)
 ```
 
-Param              | Type   | Definition
--------------------|--------|-----------
-api_token          | String | The API Token to be used for authentication with the SendSecure service
-enterprise_account | String | The SendSecure enterprise account
-endpoint           | String | The URL to the SendSecure service ("https://portal.xmedius.com" will be used by default if empty)
-locale             | String | The locale in which the server errors will be returned ("en" will be used by default if empty)
+Param              | Definition
+-------------------|-----------
+api_token          | The API Token to be used for authentication with the SendSecure service
+enterprise_account | The SendSecure enterprise account
+endpoint           | The URL to the SendSecure service ("https://portal.xmedius.com" will be used by default if empty)
+locale             | The locale in which the server errors will be returned ("en" will be used by default if empty)
 
 ### Get Enterprise Settings
 ```
-get_enterprise_settings(self)
+get_enterprise_settings()
 ```
 Returns all values/properties of the enterprise account's settings specific to SendSecure.
 
 ### Get Default Security Profile
 ```
-get_default_security_profile(self, user_email)
+get_default_security_profile(user_email)
 ```
 Returns the default security profile (if it has been set) for a specific user, with all its setting values/properties.
 
-Param      | Type   | Definition
------------|--------|-----------
-user_email | String | The email address of a SendSecure user of the current enterprise account
+Param      | Definition
+-----------|-----------
+user_email | The email address of a SendSecure user of the current enterprise account
 
 ### Get Security Profiles
 ```
-get_security_profiles(self, user_email)
+get_security_profiles(user_email)
 ```
 Returns the list of all security profiles available to a specific user, with all their setting values/properties.
 
-Param      | Type   | Definition
------------|--------|-----------
-user_email | String | The email address of a SendSecure user of the current enterprise account
+Param      | Definition
+-----------|-----------
+user_email | The email address of a SendSecure user of the current enterprise account
 
 ### Initialize SafeBox
 ```
-initialize_safebox(self, safebox)
+initialize_safebox(safebox)
 ```
-Pre-creates a SafeBox on the SendSecure system and returns the updated Safebox object with the necessary system parameters filled out (GUID, public encryption key, upload URL).
+Pre-creates a SafeBox on the SendSecure system and returns the updated [Safebox](#safebox) object with the necessary system parameters filled out (GUID, public encryption key, upload URL).
 
-Param      | Type    | Definition
------------|---------|-----------
-safebox    | Safebox | A Safebox object to be initialized by the SendSecure system
+Param      | Definition
+-----------|-----------
+safebox    | A [Safebox](#safebox) object to be initialized by the SendSecure system
 
 ### Upload Attachment
 ```
-upload_attachment(self, safebox, attachment)
+upload_attachment(safebox, attachment)
 ```
-Uploads the specified file as an Attachment of the specified SafeBox and returns the updated Attachment object with the GUID parameter filled out.
+Uploads the specified file as an Attachment of the specified SafeBox and returns the updated [Attachment](#attachment) object with the GUID parameter filled out.
 
-Param       | Type       | Definition
-------------|------------|-----------
-safebox     | Safebox    | An initialized Safebox object
-attachment  | Attachment | An Attachment object - the file to upload to the SendSecure system
+Param       | Definition
+------------|-----------
+safebox     | An initialized [Safebox](#safebox) object
+attachment  | An [Attachment](#attachment) object - the file to upload to the SendSecure system
 
 ### Commit SafeBox
 ```
-commit_safebox(self, safebox)
+commit_safebox(safebox)
 ```
 Finalizes the creation (commit) of the SafeBox on the SendSecure system.
 This actually "Sends" the SafeBox with all content and contact info previously specified.
 
-Param      | Type    | Definition
------------|---------|-----------
-safebox    | Safebox | A Safebox object already initialized, with security profile, recipient(s), subject and message already defined, and attachments already uploaded. 
+Param      | Definition
+-----------|-----------
+safebox    | A [Safebox](#safebox) object already initialized, with security profile, recipient(s), subject and message already defined, and attachments already uploaded. 
 
 ### Submit SafeBox
 ```
-submit_safebox(self, safebox)
+submit_safebox(safebox)
 ```
 This method is a high-level combo that initializes the SafeBox, uploads all attachments and commits the SafeBox.
 
-Param      | Type    | Definition
------------|---------|-----------
-safebox    | Safebox | A non-initialized Safebox object with security profile, recipient(s), subject, message and attachments (not yet uploaded) already defined. 
+Param      | Definition
+-----------|-----------
+safebox    | A non-initialized [Safebox](#safebox) object with security profile, recipient(s), subject, message and attachments (not yet uploaded) already defined. 
 
 
 ## Helper Modules
 
+<a name="safebox"></a>
 ### Safebox
+
+Builds an object to send all the necessary information to create a new Safebox.
+
+Attribute             | Definition
+----------------------|-----------
+guid                  | The unique identifier of the SafeBox (filled by the system once the SafeBox is initialized).
+upload_url            | The URL used to upload the SafeBox attachments (filled by the system once the SafeBox is initialized).
+public_encryption_key | The key used to encrypt the SafeBox attachments and/or messages (filled by the system once the SafeBox is initialized).
+user_email            | The email address of the creator of the SafeBox (mandatory).
+subject               | The subject of the SafeBox (optional).
+message               | The initial message of the SafeBox (optional if the SafeBox has at least one attachment).
+recipients            | The list of all [Recipient](#recipient) objects of the SafeBox (mandatory, at least one recipient).
+attachments           | The list of all [Attachment](#attachment) objects of the SafeBox (optional if the SafeBox has a message).
+security_profile      | The SecurityProfile object defining security options for the SafeBox (mandatory).
+notification_language | The language used for email notifications sent to the recipients (optional, English by default).
 
 ### SafeboxResponse
 
-### Attachment
+Represents the response to the successful creation of a SafeBox in the SendSecure system.
+All attributes are filled by the system once the SafeBox is successfully created (sent).
 
+Attribute            | Definition
+---------------------|-----------
+guid                 | The unique identifier of the SafeBox.
+preview_url          | The URL to access the SafeBox in the SendSecure Web Portal.
+encryption_key       | The key that may be required to decrypt the SafeBox content (only if Double Encryption is enabled in the Security Profile).
+
+<a name="recipient"></a>
 ### Recipient
 
+Builds an object to create a recipient for the SafeBox.
+
+Attribute            | Definition
+---------------------|-----------
+email                | The email address of the recipient (mandatory).
+first_name           | The first name of the recipient (optional).
+last_name            | The last name of the recipient (optional).
+company_name         | The company name of the recipient (optional).
+contact_methods      | The list of all [ContactMethod](#contactmethod) objects of the recipient (may be mandatory depending on the Security Profile of the SafeBox).
+
+<a name="contactmethod"></a>
 ### ContactMethod
+
+Builds an object to create a phone number destination owned by the recipient (as part of the Recipient object attributes).
+Any ContactMethod – plus the recipient's email address – will be usable as Security Code delivery means to the recipient.
+All attributes are mandatory.
+
+Attribute            | Definition
+---------------------|-----------
+destination          | A phone number owned by the recipient.
+destination_type     | The phone number's type (i.e. home/cell/office/other).
+
+
+<a name="attachment"></a>
+### Attachment
+
+Builds an object to be uploaded to the server as attachment of the SafeBox.
+Can be created either with a [File Path](#filepath), a [File](#file) or a [Stream](#stream).
+All attributes are mandatory (unless otherwise stated).
+
+<a name="filepath"></a>
+#### File Path
+
+Attribute            | Definition
+---------------------|-----------
+guid                 | The unique identifier of the attachment (filled by the system once the file is uploaded).
+content_type         | The file Content-type (MIME). 
+source               | The path (full filename) of the file to upload.
+filename             | An alternative file name for the file to upload (optional).
+
+<a name="file"></a>
+#### File
+
+Attribute            | Definition
+---------------------|-----------
+guid                 | The unique identifier of the attachment (filled by the system once the file is uploaded).
+content_type         | The file Content-type (MIME). 
+source               | The file object to upload.
+filename             | An alternative file name for the file to upload (optional).
+
+<a name="stream"></a>
+#### Stream
+
+Attribute            | Definition
+---------------------|-----------
+guid                 | The unique identifier of the attachment (filled by the system once the file is uploaded).
+content_type         | The file Content-type (MIME). 
+source               | The data to upload (any object that implement the file.read() method).
+filename             | The file name.
+size                 | The file size.
 
 ### SecurityProfile
 
+Represents the settings of a Security Profile.
+The use of specific attributes of this object rather takes place in advanced scenarios.
+To know all available attributes, please look in the library.
+
 ### EnterpriseSettings
 
+Represents the SendSecure settings of an Enterprise Account.
+The use of specific attributes of this object rather takes place in advanced scenarios.
+To know all available attributes, please look in the library.
+
 ### ExtensionFilter
+
+Represents the list of allowed/forbidden extensions for SafeBox attachments (part of the EnterpriseSettings).
+The use of specific attributes of this object rather takes place in advanced scenarios.
+To know all available attributes, please look in the library.
 
 <a name="license"></a>
 # License
