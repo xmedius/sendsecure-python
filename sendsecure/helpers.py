@@ -39,12 +39,12 @@ class ContactMethod:
 
 
 class Recipient:
-    def __init__(self, email, first_name=None, last_name=None, company_name=None, contact_methods=[]):
+    def __init__(self, email, first_name=None, last_name=None, company_name=None, contact_methods=None):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
         self.company_name = company_name
-        self.contact_methods = contact_methods
+        self.contact_methods = contact_methods or []
 
     def to_dict(self):
         content = {}
@@ -62,7 +62,7 @@ class Recipient:
 
 
 class Safebox:
-    def __init__(self, user_email, subject=None, message=None, security_profile=None, recipients = [], attachments = [], notification_language='en'):
+    def __init__(self, user_email, subject=None, message=None, security_profile=None, recipients = None, attachments = None, notification_language='en'):
         self.user_email = user_email
         self.subject = subject
         self.message = message
@@ -70,8 +70,8 @@ class Safebox:
         self.guid = None
         self.public_encryption_key = None
         self.upload_url = None
-        self.recipients = recipients
-        self.attachments = attachments
+        self.recipients = recipients or []
+        self.attachments = attachments or []
         self.security_profile = security_profile
 
     def to_dict(self):
@@ -102,7 +102,7 @@ class Safebox:
         return content
 
     def to_json(self):
-        safebox = {'safebox' : self.to_dict()}
+        safebox = {'safebox' : self.to_dict(), 'user_email' : self.user_email}
         return json.dumps(safebox)
 
 
