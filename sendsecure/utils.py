@@ -3,6 +3,7 @@ from StringIO import StringIO
 import re
 import os
 import platform
+import urllib
 
 def _get_cacert_path():
     if platform.system().lower() == 'windows':
@@ -97,7 +98,10 @@ def http_upload_raw_stream(url, stream, content_type, filename, filesize):
     c.setopt(c.URL, url)
     c.setopt(c.WRITEFUNCTION, response_body.write)
     c.setopt(c.HEADERFUNCTION, header.write)
-    c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename="' + filename + '"', 'Content-Length: ' + str(filesize)])
+    if all(ord(c) < 128 for c in filename):
+        c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename="' + str(filename) + '"', 'Content-Length: ' + str(filesize)])
+    else:
+        c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename*=UTF-8\'\'' + urllib.quote_plus(filename.encode('utf-8')), 'Content-Length: ' + str(filesize)])
     c.setopt(c.READFUNCTION, stream.read)
     cacert_file = _get_cacert_path()
     if cacert_file:
