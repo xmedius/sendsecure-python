@@ -11,8 +11,9 @@ if __name__ == "__main__":
         application_type = 'The Force App'
         endpoint = 'https://portal.xmedius.com'
 
-        token = Client.get_user_token(enterprise_account, username, password,
+        result = Client.get_user_token(enterprise_account, username, password,
             device_id, device_name, application_type, endpoint)
-        print 'User token:', token
+        print 'User token:', result['token']
+        print 'User id:', result['user_id']
     except Exception, details:
         print details

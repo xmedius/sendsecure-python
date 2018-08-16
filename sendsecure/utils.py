@@ -4,6 +4,8 @@ import re
 import os
 import platform
 import urllib
+from urlparse import urlparse, urlunparse
+
 
 def _get_cacert_path():
     if platform.system().lower() == 'windows':
@@ -16,7 +18,12 @@ def urljoin(parts, params=None):
     if not params:
         return url
     url_params = [p[0] + '=' + str(p[1]) for p in params.items()]
-    return url + '?' + '&'.join(url_params)
+
+    parsed_url = list(urlparse(url))
+    if parsed_url[4]:
+        url_params.append(parsed_url[4])
+    parsed_url[4] = '&'.join(url_params)
+    return urlunparse(parsed_url)
 
 def _get_http_status(status_lines):
     last_status_line = status_lines[0]
@@ -60,6 +67,50 @@ def http_post(url, content_type, body, accept, auth_token=None):
     c.setopt(c.HEADERFUNCTION, header.write)
     c.setopt(c.HTTPHEADER, request_headers)
     c.setopt(c.POSTFIELDS, body)
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
+    c.perform()
+    status_code = c.getinfo(pycurl.HTTP_CODE)
+    c.close()
+    status_line = _get_http_status(header.getvalue().splitlines())
+    return (status_code, status_line, response_body.getvalue())
+
+def http_patch(url, content_type, body, accept, auth_token=None):
+    request_headers = ['Content-Type: ' + content_type, 'Accept: ' + accept]
+    if auth_token:
+        request_headers.append('Authorization-Token: ' + str(auth_token))
+    response_body = StringIO()
+    header = StringIO()
+    c = pycurl.Curl()
+    c.setopt(pycurl.CUSTOMREQUEST, "PATCH")
+    c.setopt(c.POST, 1)
+    c.setopt(c.URL, url)
+    c.setopt(c.WRITEFUNCTION, response_body.write)
+    c.setopt(c.HEADERFUNCTION, header.write)
+    c.setopt(c.HTTPHEADER, request_headers)
+    c.setopt(c.POSTFIELDS, body)
+    cacert_file = _get_cacert_path()
+    if cacert_file:
+        c.setopt(c.CAINFO, cacert_file)
+    c.perform()
+    status_code = c.getinfo(pycurl.HTTP_CODE)
+    c.close()
+    status_line = _get_http_status(header.getvalue().splitlines())
+    return (status_code, status_line, response_body.getvalue())
+
+def http_delete(url, accept, auth_token=None):
+    request_headers = ['Accept: ' + accept]
+    if auth_token:
+        request_headers.append('Authorization-Token: ' + auth_token)
+    response_body = StringIO()
+    header = StringIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(pycurl.CUSTOMREQUEST, "DELETE")
+    c.setopt(c.WRITEFUNCTION, response_body.write)
+    c.setopt(c.HEADERFUNCTION, header.write)
+    c.setopt(c.HTTPHEADER, request_headers)
     cacert_file = _get_cacert_path()
     if cacert_file:
         c.setopt(c.CAINFO, cacert_file)

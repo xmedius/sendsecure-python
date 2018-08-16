@@ -1,4 +1,4 @@
-from sendsecure import Safebox, Recipient, ContactMethod, Attachment, Client
+from sendsecure import Safebox, Participant, ContactMethod, Attachment, Client
 
 if __name__ == "__main__":
     try:
@@ -7,19 +7,20 @@ if __name__ == "__main__":
          enterprise_account = 'deathstar'
          endpoint = 'https://portal.xmedius.com'
 
-         safebox = Safebox(user_email)
+         safebox = Safebox(user_email=user_email)
          safebox.subject = 'Family matters'
          safebox.message = 'Son, you will find attached the evidence.'
 
-         recipient = Recipient('lukeskywalker@rebels.com')
-         recipient.contact_methods.append(ContactMethod('555-232-5334'))
-         safebox.recipients.append(recipient);
+         participant = Participant(email='lukeskywalker@rebels.com')
+         participant.guest_options.contact_methods.append(ContactMethod({'destination': '555-232-5334'}))
+         safebox.participants.append(participant)
 
-         attachment = Attachment('Birth_Certificate.pdf', 'application/pdf');
-         safebox.attachments.append(attachment);
+         attachment = Attachment({'source': 'Birth_Certificate.pdf', 'content_type': 'application/pdf'})
+         safebox.attachments.append(attachment)
 
-         client = Client(token, enterprise_account, endpoint);
-         safe_response = client.submit_safebox(safebox);
+         options = {'token': token, 'enterprise_account': enterprise_account, 'endpoint': endpoint}
+         client = Client(options)
+         safe_response = client.submit_safebox(safebox)
          print 'SafeBox ID:', safe_response.guid
     except Exception, details:
         print details
