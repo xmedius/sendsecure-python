@@ -1,8 +1,8 @@
 import json
-from utils import *
-from helpers import *
-from exceptions import *
-from json_client import *
+from .utils import *
+from .helpers import *
+from .exceptions import *
+from .json_client import *
 
 
 class Client:
@@ -601,6 +601,38 @@ class Client:
         return [EventHistory(event_history_params) for event_history_params in result['event_history']]
 
     """
+    Archive a specific safebox.
+
+    @param safebox:
+                The safebox to be archived
+    @param user_email:
+                The current user email
+    @return: An object containing the request result
+    """
+    def archive_safebox(self, safebox, user_email):
+        if safebox.guid is None:
+            raise SendSecureException(0, 'SafeBox GUID cannot be null', '')
+        user_email_json = json.dumps({ 'user_email': user_email })
+        json_result = self.json_client.archive_safebox(safebox.guid, user_email_json)
+        return json.loads(json_result)
+
+    """
+    Remove the tag "archive" from a specific safebox.
+
+    @param safebox:
+                The safebox to be archived
+    @param user_email:
+                The current user email
+    @return: An object containing the request result
+    """
+    def unarchive_safebox(self, safebox, user_email):
+        if safebox.guid is None:
+            raise SendSecureException(0, 'SafeBox GUID cannot be null', '')
+        user_email_json = json.dumps({ 'user_email': user_email })
+        json_result = self.json_client.unarchive_safebox(safebox.guid, user_email_json)
+        return json.loads(json_result)
+
+    """
     Call to get the list of all the localized messages of a consent group.
 
     @param consent_group_id:
@@ -611,3 +643,27 @@ class Client:
         json_result = self.json_client.get_consent_group_messages(consent_group_id)
         result = json.loads(json_result)
         return ConsentMessageGroup(result["consent_message_group"])
+
+    """
+    Call to unfollow the SafeBox. By default, all new Safeboxes are "followed"
+
+    @param safebox:
+                A Safebox object
+    @return: An object containing the request result
+    """
+    def unfollow(self, safebox):
+        json_result = self.json_client.unfollow(safebox.guid)
+        result = json.loads(json_result)
+        return result
+
+    """
+    Call to follow the SafeBox (opposite of the unfollow call).
+
+    @param safebox:
+                A Safebox object
+    @return: An object containing the request result
+    """
+    def follow(self, safebox):
+        json_result = self.json_client.follow(safebox.guid)
+        result = json.loads(json_result)
+        return result

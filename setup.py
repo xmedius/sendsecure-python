@@ -9,12 +9,9 @@ setup(
     author='XMedius R&D',
     license='MIT',
     classifiers=[
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.7'
     ],
     packages=['sendsecure'],
     package_data={'sendsecure': ['cacert.pem']},
-    install_requires=['pycurl']
 )
 

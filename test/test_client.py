@@ -71,7 +71,7 @@ class TestClient(unittest.TestCase):
                                                   }],
                                               'message': 'lorem ipsum...',
                                               'notification_language': 'en' }))
-        attachment = Attachment({'source': 'simple.pdf', 'content_type': 'application/pdf'})
+        attachment = Attachment({'source': 'test.pdf', 'content_type': 'application/pdf'})
         safebox.attachments.append(attachment)
         expected_response = json.dumps({ 'guid': '1c820789a50747df8746aa5d71922a3f',
                                          'user_id': 3,
@@ -686,7 +686,7 @@ class TestClient(unittest.TestCase):
 
     def test_reply(self):
         reply = Reply({'message': 'Reply message'})
-        attachment = Attachment({'source': 'simple.pdf', 'content_type': 'application/pdf'})
+        attachment = Attachment({'source': 'test.pdf', 'content_type': 'application/pdf'})
         reply.attachments.append(attachment)
         expected_response = json.dumps({ 'result': True, 'message': 'SafeBox successfully updated.' })
         new_file_response = json.dumps({ 'temporary_document_guid': '1c820789a50747df8746aa5d71922a3f',
@@ -1199,6 +1199,32 @@ class TestClient(unittest.TestCase):
             self.client.get_safebox_event_history(sb)
         self.assertIn('SafeBox GUID cannot be null', context.exception.message)
 
+    def test_archive_safebox(self):
+        expected_response = json.dumps({'result': True, 'message': 'SafeBox successfully archived'})
+        self.client.json_client.archive_safebox = Mock(return_value=expected_response)
+        result = self.client.archive_safebox(self.safebox, 'user@example.com')
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'SafeBox successfully archived')
+
+    def test_archive_safebox_should_fail_when_safebox_GUID_is_missing(self):
+        sb = Safebox(params=json.dumps({ 'guid': None }))
+        with self.assertRaises(SendSecureException) as context:
+            self.client.archive_safebox(sb, 'user@exmaple.com')
+        self.assertIn('SafeBox GUID cannot be null', context.exception.message)
+
+    def test_unarchive_safebox(self):
+        expected_response = json.dumps({'result': True, 'message': 'SafeBox successfully removed from Archives'})
+        self.client.json_client.unarchive_safebox = Mock(return_value=expected_response)
+        result = self.client.unarchive_safebox(self.safebox, 'user@example.com')
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'SafeBox successfully removed from Archives')
+
+    def test_unarchive_safebox_should_fail_when_safebox_GUID_is_missing(self):
+        sb = Safebox(params=json.dumps({ 'guid': None }))
+        with self.assertRaises(SendSecureException) as context:
+            self.client.unarchive_safebox(sb, 'user@exmaple.com')
+        self.assertIn('SafeBox GUID cannot be null', context.exception.message)
+
     def test_get_consent_group_messages_error(self):
         expected_response = json.dumps({ 'consent_message_group': {
                                             'id': 1,
@@ -1221,6 +1247,21 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(result.consent_messages[0], ConsentMessage)
         self.assertEqual(result.consent_messages[0].locale, 'en')
         self.assertEqual(result.consent_messages[0].value, 'Lorem ipsum')
+
+    def test_unfollow(self):
+        expected_response = json.dumps({'result': True, 'message': 'The SafeBox is now unfollowed.'})
+        self.client.json_client.unfollow = Mock(return_value=expected_response)
+        result = self.client.unfollow(self.safebox)
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'The SafeBox is now unfollowed.')
+
+    def test_follow(self):
+        expected_response = json.dumps({'result': True, 'message': 'The SafeBox is now followed.'})
+        self.client.json_client.follow = Mock(return_value=expected_response)
+        result = self.client.follow(self.safebox)
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'The SafeBox is now followed.')
+
 
 if __name__ == '__main__':
     unittest.main()

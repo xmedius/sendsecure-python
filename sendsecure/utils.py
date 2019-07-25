@@ -1,11 +1,15 @@
-import pycurl
-from StringIO import StringIO
+from io import BytesIO
+
+import sys
+
 import re
 import os
 import platform
 import urllib
-from urlparse import urlparse, urlunparse
+import secrets
 
+from urllib import request
+from urllib.parse import urlparse, urlunparse
 
 def _get_cacert_path():
     if platform.system().lower() == 'windows':
@@ -28,137 +32,78 @@ def urljoin(parts, params=None):
 def _get_http_status(status_lines):
     last_status_line = status_lines[0]
     for line in status_lines:
-        if line.startswith('HTTP/'):
-            last_status_line = line
+        str_line = line.decode('utf-8')
+        if str_line.startswith('HTTP/'):
+            last_status_line = str_line
     m = re.match(r'HTTP\/\S*\s*\d+\s*(.*?)\s*$', last_status_line)
     return m.groups(1)[0] if m else ''
 
-def http_get(url, accept, auth_token=None):
-    request_headers = ['Accept: ' + accept]
+def _request(url, method, accept, auth_token=None, body=''):
+    req = request.Request(url, body.encode('utf8'), method=method)
+    req.add_header('Content-type', "application/json")
+    req.add_header('Accept', "application/json")
     if auth_token:
-        request_headers.append('Authorization-Token: ' + auth_token)
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    if request_headers:
-        c.setopt(c.HTTPHEADER, request_headers)
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
+        req.add_header('authorization-token', auth_token)
+    res = request.urlopen(req);
+    content = res.read().decode('utf-8')
+    return (res.status, res.reason, content)
 
-def http_post(url, content_type, body, accept, auth_token=None):
-    request_headers = ['Content-Type: ' + content_type, 'Accept: ' + accept]
-    if auth_token:
-        request_headers.append('Authorization-Token: ' + str(auth_token))
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    c.setopt(c.HTTPHEADER, request_headers)
-    c.setopt(c.POSTFIELDS, body)
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
 
-def http_patch(url, content_type, body, accept, auth_token=None):
-    request_headers = ['Content-Type: ' + content_type, 'Accept: ' + accept]
-    if auth_token:
-        request_headers.append('Authorization-Token: ' + str(auth_token))
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(pycurl.CUSTOMREQUEST, "PATCH")
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    c.setopt(c.HTTPHEADER, request_headers)
-    c.setopt(c.POSTFIELDS, body)
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
+def http_get(url, accept="application/json", auth_token=None):
+    return _request(url, 'GET', accept, auth_token=auth_token)
 
-def http_delete(url, accept, auth_token=None):
-    request_headers = ['Accept: ' + accept]
-    if auth_token:
-        request_headers.append('Authorization-Token: ' + auth_token)
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.URL, url)
-    c.setopt(pycurl.CUSTOMREQUEST, "DELETE")
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    c.setopt(c.HTTPHEADER, request_headers)
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
+
+def http_post(url, content_type, body, accept="application/json", auth_token=None):
+    return _request(url, 'POST', accept, body=body, auth_token=auth_token)
+
+
+def http_put(url, content_type, body, accept="application/json", auth_token=None):
+    return _request(url, 'PUT', accept, body=body, auth_token=auth_token)
+
+def http_patch(url, content_type, body, accept="application/json", auth_token=None):
+    return _request(url, 'PATCH', accept, body=body, auth_token=auth_token)
+
+def http_delete(url, accept="application/json", auth_token=None):
+    return _request(url, 'DELETE', accept, auth_token=auth_token)
 
 def http_upload_filepath(url, filepath, content_type, alternate_filename = None):
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    if alternate_filename:
-        c.setopt(c.HTTPPOST, [("file", (c.FORM_FILE, filepath, c.FORM_CONTENTTYPE, content_type, c.FORM_FILENAME, alternate_filename))])
-    else:
-        c.setopt(c.HTTPPOST, [("file", (c.FORM_FILE, filepath, c.FORM_CONTENTTYPE, content_type))])
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
+    filename = alternate_filename or os.path.basename(filepath)
+    with open(filepath, 'rb') as filestream:
+        return http_upload_raw_stream(url, filestream, content_type, filename, 0)
 
-def http_upload_raw_stream(url, stream, content_type, filename, filesize):
-    response_body = StringIO()
-    header = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.POST, 1)
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, response_body.write)
-    c.setopt(c.HEADERFUNCTION, header.write)
-    if all(ord(c) < 128 for c in filename):
-        c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename="' + str(filename) + '"', 'Content-Length: ' + str(filesize)])
-    else:
-        c.setopt(c.HTTPHEADER, ['Content-Type: ' + content_type, 'Content-Disposition: attachment; filename*=UTF-8\'\'' + urllib.quote_plus(filename.encode('utf-8')), 'Content-Length: ' + str(filesize)])
-    c.setopt(c.READFUNCTION, stream.read)
-    cacert_file = _get_cacert_path()
-    if cacert_file:
-        c.setopt(c.CAINFO, cacert_file)
-    c.perform()
-    status_code = c.getinfo(pycurl.HTTP_CODE)
-    c.close()
-    status_line = _get_http_status(header.getvalue().splitlines())
-    return (status_code, status_line, response_body.getvalue())
+def http_upload_raw_stream(url, stream, content_type, filename, filesize=0):
+    try:
+        (multipart, body) = make_file_multipart(filename, stream, content_type)
+
+        req = request.Request(url, data=body, method='POST')
+        req.add_header('Content-type', multipart)
+        res = request.urlopen(req)
+        return (res.status, res.reason, res.read().decode('utf-8'))
+    except urllib.error.HTTPError as e:
+        print(e.headers)  # Read the body of the error response
+        raise e
+
+
+def make_file_multipart(filename, handle, content_type, field='file'):
+    endl = b'\r\n'
+
+    boundary_value = secrets.token_hex(16)
+    boundary = b'--' + boundary_value.encode('utf-8')
+    head = get_multipart_content_type(boundary_value)
+
+    body = BytesIO()
+    body.write(boundary + endl)
+    body.write(get_part_header(field, filename, content_type))
+    body.write(handle.read())
+    body.write(endl)
+    body.write( boundary + b'--' + endl)
+    return (head, body.getvalue())
+
+def get_multipart_content_type(boundary_value):
+    return 'multipart/form-data; boundary={}'.format(
+        boundary_value)
+
+def get_part_header(name, filename, content_type):
+    return ('Content-Disposition: form-data; '
+            'name="{}"; filename="{}"\r\n'
+            'Content-Type: {}\r\n\r\n').format(name, filename, content_type).encode('utf-8')

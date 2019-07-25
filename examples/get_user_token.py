@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
         result = Client.get_user_token(enterprise_account, username, password,
             device_id, device_name, application_type, endpoint)
-        print 'User token:', result['token']
-        print 'User id:', result['user_id']
-    except Exception, details:
-        print details
+        print('User token:', result['token'])
+        print('User id:', result['user_id'])
+    except Exception as details:
+        print(details)

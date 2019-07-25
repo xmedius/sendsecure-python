@@ -1,6 +1,7 @@
 import os
-from utils import *
-from exceptions import *
+import io
+from .utils import *
+from .exceptions import *
 
 
 class JsonClient:
@@ -72,7 +73,7 @@ class JsonClient:
         response_body = None
         if type(source) == str:
             (status_code, status_line, response_body) = http_upload_filepath(str(upload_url), source, content_type, filename)
-        elif type(source) == file:
+        elif self._is_file(source):
             upload_filename = filename or source.name.split('/')[-1]
             upload_filesize = filesize or (os.path.getsize(source.name) - source.tell())
             (status_code, status_line, response_body) = http_upload_raw_stream(str(upload_url), source, content_type, upload_filename, upload_filesize)
@@ -207,7 +208,7 @@ class JsonClient:
     @return: The json containing the search result
     """
     def search_recipient(self, term):
-        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/participants/autocomplete?term=' + term])
+        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/recipients/autocomplete?term=' + term])
         return self._do_get(url, 'application/json')
 
     """
@@ -434,6 +435,56 @@ class JsonClient:
         return self._do_get(url, 'application/json')
 
     """
+    Archive a specific safebox
+
+    @param safebox_guid:
+                The guid of the safebox
+    @param user_email:
+                The current user email
+    @return: The json containing the request result
+    """
+    def archive_safebox(self, safebox_guid, user_email):
+        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/safeboxes', safebox_guid, '/tag/archive'])
+        return self._do_post(url, 'application/json', user_email, 'application/json')
+
+    """
+    Remove the tag "archive" from the safebox
+
+    @param safebox_guid:
+                The guid of the safebox
+    @param user_email:
+                The current user email
+    @return: The json containing the request result
+    """
+    def unarchive_safebox(self, safebox_guid, user_email):
+        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/safeboxes', safebox_guid, '/untag/archive'])
+        return self._do_post(url, 'application/json', user_email, 'application/json')
+
+
+    """
+    Call to unfollow the SafeBox. By default, all new Safeboxes are "followed"
+
+    @param safebox:
+                A Safebox object
+    @return: An object containing the request result
+    """
+    def unfollow(self, safebox_guid):
+        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/safeboxes', safebox_guid, '/unfollow'])
+        return self._do_patch(url, 'application/json', '', 'application/json')
+
+    """
+    Call to follow the SafeBox (opposite of the unfollow call).
+
+    @param safebox:
+                A Safebox object
+    @return: An object containing the request result
+    """
+    def follow(self, safebox_guid):
+        url = urljoin([self._get_sendsecure_endpoint(), 'api/v2/safeboxes', safebox_guid, '/follow'])
+        return self._do_patch(url, 'application/json', '', 'application/json')
+
+
+    """
     Call to get the list of all the localized messages of a consent group.
 
     @param consent_group_id:
@@ -482,3 +533,6 @@ class JsonClient:
         if status_code >= 400:
             raise SendSecureException(status_code, status_line, response_body)
         return response_body
+
+    def _is_file(self, obj): 
+        return isinstance(obj, (io.TextIOBase, io.BufferedIOBase, io.RawIOBase, io.IOBase))

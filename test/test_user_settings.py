@@ -14,7 +14,8 @@ class TestUserSettings(unittest.TestCase):
                              'secure_link': {
                                'enabled': True,
                                'url': 'https://sendsecure.integration.xmedius.com/r/6125b3f',
-                               'security_profile_id': 1 }
+                               'security_profile_id': 1 },
+                             'always_promote_as_privileged': True
                             }
     def test_initialization_with_params(self):
         user_settings = UserSettings(self.user_settings_params)
@@ -32,6 +33,7 @@ class TestUserSettings(unittest.TestCase):
         self.assertTrue(secure_link.enabled)
         self.assertEqual(secure_link.url, 'https://sendsecure.integration.xmedius.com/r/6125b3f')
         self.assertEqual(secure_link.security_profile_id, 1)
+        self.assertTrue(user_settings.always_promote_as_privileged)
 
     def test_initialization_with_json_params(self):
         user_settings = UserSettings(json.dumps(self.user_settings_params))
@@ -49,6 +51,7 @@ class TestUserSettings(unittest.TestCase):
         self.assertTrue(secure_link.enabled)
         self.assertEqual(secure_link.url, 'https://sendsecure.integration.xmedius.com/r/6125b3f')
         self.assertEqual(secure_link.security_profile_id, 1)
+        self.assertTrue(user_settings.always_promote_as_privileged)
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,5 @@
 import json
-from exceptions import *
+from .exceptions import *
 
 class _Enum:
     def __init__(self, values):
@@ -32,7 +32,7 @@ class JSONable:
     def _is_json(self, params):
         try:
             json_object = json.loads(params)
-        except TypeError, error:
+        except TypeError as error:
             return False
         return True
 
@@ -53,7 +53,7 @@ class JSONable:
             params = json.loads(params)
 
         for key, value in params.items():
-            old_value = self.__dict__[key] if self.__dict__.has_key(key) else None
+            old_value = self.__dict__[key] if key in self.__dict__ else None
             if type(value) is list:
                 if old_value is None:
                     old_value = []
@@ -175,7 +175,7 @@ class Contactable(JSONable):
         if self._is_json(params):
             params = json.loads(params)
 
-        if params.has_key('contact_methods'):
+        if 'contact_methods' in params:
             contacts_id = []
             for contact in params['contact_methods']:
                 for key, value in contact.items():
@@ -217,6 +217,7 @@ class Favorite(Contactable):
         self.last_name = None
         self.email = email
         self.company_name = None
+        self.always_promote = None
         self.contact_methods = []
 
         if params is not None:
@@ -244,6 +245,7 @@ class Participant(JSONable):
         self.first_name = None
         self.last_name = None
         self.email = email
+        self.privileged = None
 
         if params is not None:
             JSONable.__init__(self, params)
@@ -268,7 +270,8 @@ class Participant(JSONable):
         keys = (
             'first_name',
             'last_name',
-            'email'
+            'email',
+            'privileged'
         )
         return keys
 
@@ -347,7 +350,7 @@ class Safebox(JSONable):
         if self._is_json(params):
             params = json.loads(params)
 
-        if params.has_key('is_creation'):
+        if 'is_creation' in params:
             params['security_options'] = {}
             for key in self._get_security_options_keys():
                 if key in params.keys():

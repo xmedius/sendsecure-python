@@ -10,6 +10,7 @@ class TestFavorite(unittest.TestCase):
                         'order_number': 1,
                         'created_at': "2017-04-12T15:41:39.767Z",
                         'updated_at': "2017-04-12T15:41:47.144Z",
+                        'always_promote': True,
                         'contact_methods': [{
                             'id': 1,
                             'destination': "514-555-0001",
@@ -68,7 +69,8 @@ class TestFavorite(unittest.TestCase):
                             }],
                             "company_name": "Test Company",
                             "order_number": 1,
-                            "email": "favorite@example.com"
+                            "email": "favorite@example.com",
+                            "always_promote": True,
                         }
                     }
 
@@ -96,7 +98,8 @@ class TestFavorite(unittest.TestCase):
                             }],
                             "company_name": "Test Company",
                             "order_number": 1,
-                            "email": "favorite@example.com"
+                            "email": "favorite@example.com",
+                            "always_promote": True,
                         }
                     }
         favorite = Favorite(params=self.favorite_params)

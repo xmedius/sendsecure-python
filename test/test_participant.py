@@ -8,6 +8,7 @@ class TestParticipant(unittest.TestCase):
                             'last_name': "Participant",
                             'type': "guest",
                             'role': "guest",
+                            "privileged": True,
                             'guest_options': {
                                 'locked': False,
                                 'bounced_email': False,
@@ -84,7 +85,8 @@ class TestParticipant(unittest.TestCase):
                             "last_name": "Participant",
                             "locked": False,
                             "company_name": "Test Company",
-                            "email": "participant@example.com"
+                            "email": "participant@example.com",
+                            "privileged": True
                         }
                     }
 
@@ -112,7 +114,8 @@ class TestParticipant(unittest.TestCase):
                             "last_name": "Participant",
                             "locked": False,
                             "company_name": "Test Company",
-                            "email": "participant@example.com"
+                            "email": "participant@example.com",
+                            "privileged": True
                         }
                     }
         participant = Participant(params=self.participant_params)

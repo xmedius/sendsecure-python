@@ -35,7 +35,7 @@ With this library, you will be able to:
 
 ## Prerequisites
 
-- Python version 2.7, 3.4 or 3.5
+- Python version 3.7+
 - The XM SendSecure solution, provided by [XMedius](https://www.xmedius.com?source=sendsecure-python) (demo accounts available on demand)
 
 ## Install Package
@@ -67,10 +67,10 @@ if __name__ == "__main__":
 
         token_detail = Client.get_user_token(enterprise_account, username, password,
             device_id, device_name, application_type, endpoint)
-        print 'User token:', token_detail['token']
-        print 'User id:', result['user_id']
-    except Exception, details:
-        print details
+        print('User token:', token_detail['token'])
+        print('User id:', result['user_id'])
+    except Exception as details:
+        print(details)
 ```
 
 ## SafeBox Creation (Using SafeBox Helper Class)
@@ -95,16 +95,16 @@ if __name__ == "__main__":
 
          recipient = Participant(email='lukeskywalker@rebels.com')
          recipient.guest_options.contact_methods.append(ContactMethod({'destination': '555-232-5334'}))
-         safebox.participants.append(recipient);
+         safebox.participants.append(recipient)
 
-         attachment = Attachment('Birth_Certificate.pdf', 'application/pdf');
-         safebox.attachments.append(attachment);
+         attachment = Attachment('Birth_Certificate.pdf', 'application/pdf')
+         safebox.attachments.append(attachment)
 
-         client = Client({'token': token, 'enterprise_account': enterprise_account, 'endpoint': endpoint});
-         safebox_response = client.submit_safebox(safebox);
-         print 'SafeBox ID:', safebox_response.guid
-    except Exception, details:
-        print details
+         client = Client({'token': token, 'enterprise_account': enterprise_account, 'endpoint': endpoint})
+         safebox_response = client.submit_safebox(safebox)
+         print('SafeBox ID:', safebox_response.guid)
+    except Exception as details:
+        print(details)
 ```
 
 
@@ -316,6 +316,25 @@ Param                | Definition
 safebox              | A [Safebox](#safebox) object.
 message              | A [Message](#message) object.
 
+#### Unfollow SafeBox
+```
+unfollow(safebox)
+```
+Call to unfollow the SafeBox. By default, all new SafeBoxes are "followed".
+
+Param                | Definition
+---------------------|---------------------
+safebox              | A [Safebox](#safebox) object.
+
+#### Follow SafeBox
+```
+follow(safebox)
+```
+Call to follow the SafeBox (opposite of the [unfollow](#unfollow-safebox) call).
+Param                | Definition
+---------------------|---------------------
+safebox              | A [Safebox](#safebox) object.
+
 #### Get Audit Record PDF
 ```
 get_audit_record_pdf(safebox)
@@ -446,6 +465,7 @@ safebox              | A [Safebox](#safebox) object.
 participant          | A [Participant](#participant) object.
 contact_method_ids   | An array of contact method unique IDs (see [ContactMethod](#contactmethod) object).
 
+
 ### Recipient Methods
 
 #### Search Recipient
@@ -529,20 +549,20 @@ contact_method_ids   | An array of contact method unique IDs (see [ContactMethod
 
 #### Delete Favorite
 ```
-delete_favorite(favorite_id)
+delete_favorite(favorite)
 ```
 Delete an existing favorite associated to the current user account.
 
 Param                | Definition
 ---------------------|-----------
-favorite_id          | The id of the favorite to be deleted.
+favorite             | A [Favorite](#favorite) object.
 
 ## Helper Objects
 Here is the alphabetical list of all available objects, with their attributes.
 
 ### Attachment
 Builds an object to be uploaded to the server as attachment of the SafeBox.
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 Can be created either with a [File Path](#file-path), a [File](#file) or a [Stream](#stream).
 All attributes are mandatory (unless otherwise stated).
 
@@ -594,11 +614,11 @@ id                   | The unique ID of the consent message group.
 name                 | The name of the consent message group.
 created_at           | The creation date of the consent message group.
 updated_at           | The last modification date of the consent message group.
-consent_messages     | The list of [ConsentMessage](#consentMessage) objects (one per available locale).
+consent_messages     | The list of [ConsentMessage](#consentmessage) objects (one per available locale).
 
 ### ContactMethod
 Builds an object to create a phone number destination owned by a participant or a favorite (or retrieve the contact method information).
-May be a subset of [GuestOptions](#GuestOptions) or [Favorite](#Favorite).
+May be a subset of [GuestOptions](#guestoptions) or [Favorite](#favorite).
 Any ContactMethod – plus the email address – will be usable as Security Code delivery means to the participant.
 
 Attribute            | Definition
@@ -618,7 +638,7 @@ Depending on the context, this object may return two different types of informat
 
 * As a MessageDocument:
 Builds an object to retrieve all information of a specific document (file) from a message within an existing SafeBox.
-Subset of [Message](#Message) object.
+Subset of [Message](#message) object.
 All attributes are read only.
 
 Attribute            | Definition
@@ -631,7 +651,7 @@ url                  | The URL of the file.
 
 * As a DownloadActivityDocument:
 Builds an object with all the download activity informations for a specific document regarding a specific participant of the SafeBox.
-Subset of [DownloadActivityDetail](#downloadActivityDetail).
+Subset of [DownloadActivityDetail](#downloadactivitydetail).
 All attributes are read only.
 
 Attribute            | Definition
@@ -642,17 +662,19 @@ downloaded_date      | The date of the download.
 
 ### DownloadActivity
 Builds an object with all download activity information of all participants of an existing SafeBox.
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 All attributes are read only.
 
 Attribute            | Definition
 ---------------------|-----------
-guests               | The list of [DownloadActivityDetail](#downloadActivityDetail) objects associated with each SafeBox participant other than the Owner.
-owner                | The [DownloadActivityDetail](#downloadActivityDetail) object associated with the SafeBox Owner.
+guests               | The list of [DownloadActivityDetail](#downloadactivitydetail) objects associated with each SafeBox participant other than the Owner.
+owner                | The [DownloadActivityDetail](#downloadactivitydetail) object associated with the SafeBox Owner.
+
+
 
 ### DownloadActivityDetail
 Builds an object with all the download activity details for a specific participant of the SafeBox.
-Subset of [DownloadActivity](#DownloadActivity).
+Subset of [DownloadActivity](#downloadactivity).
 All attributes are read only.
 
 Attribute            | Definition
@@ -682,7 +704,7 @@ updated_at                        | The last modification date of the enterprise
 
 ### EventHistory
 Builds an object with all Event History information of a SafeBox.
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 All attributes are read only.
 
 Attribute            | Definition
@@ -694,7 +716,7 @@ message              | The complete message describing the event, localized acco
 
 ### ExtensionFilter
 Builds an object with the list of allowed or forbidden extensions for SafeBox attachments.
-Subset of [EnterpriseSettings](#EnterpriseSettings).
+Subset of [EnterpriseSettings](#enterprisesettings).
 All attributes are read only.
 
 Attribute            | Definition
@@ -721,7 +743,7 @@ updated_at           | (read only) The last modification date of the favorite.
 
 ### GuestOptions
 Builds an object to create a subset of additional attributes for the Participant (or retrieve participant information).
-Subset of [Participant](#Participant).
+Subset of [Participant](#participant).
 
 Attribute             | Definition
 ----------------------|-----------
@@ -738,7 +760,7 @@ updated_at            | (read only) The last modification date of the GuestOptio
 
 ### Message
 Builds an object to retrieve a specific message from an existing SafeBox.
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 All attributes are read only.
 
 Attribute            | Definition
@@ -754,7 +776,7 @@ documents            | The list of all [Document](#document) objects representin
 
 ### Participant
 Builds an object to create a participant for the SafeBox (or retrieve participant information).
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 
 Attribute            | Definition
 ---------------------|-----------
@@ -770,7 +792,7 @@ message_total_count  | (read only) The total count of messages of the participan
 
 ### PersonalSecureLink
 Builds an object to retrieve information about the Personal Secure Link of the current user.
-Subset of [UserSettings](#UserSettings).
+Subset of [UserSettings](#usersettings).
 All attributes are read only.
 
 Attribute              | Definition
@@ -830,15 +852,15 @@ closed_at                  | (read only) The date on which the SafeBox was close
 content_deleted_at         | (read only) The date on which the content of the SafeBox was deleted.
 security_options           | (read only) The [SecurityOptions](#securityoptions) object, containing the whole set of Security Options of the SafeBox.
 messages                   | (read only) The list of all [Message](#message) objects of the SafeBox.
-download_activity          | (read only) The [DownloadActivity](#downloadActivity) object keeping track of all downloads of the SafeBox.
-event_history              | (read only) The [EventHistory](#eventHistory) object keeping track of all events of the SafeBox.
+download_activity          | (read only) The [DownloadActivity](#downloadactivity) object keeping track of all downloads of the SafeBox.
+event_history              | (read only) The [EventHistory](#eventhistory) object keeping track of all events of the SafeBox.
 
 \* A message is mandatory if no attachments are provided, and at least one attachment is required if no message is provided.
 \*\* A Security Profile is always required to create a SafeBox. If no Security Profile ID is specified, the default Security Profile associated to the user will be used.
 
 ### SecurityOptions
 Builds an object to specify the security options at SafeBox creation, according to the permissions defined in the Security Profile specified in the SafeBox object.
-Subset of [Safebox](#Safebox) object.
+Subset of [Safebox](#safebox) object.
 By default, all attribute values are inherited from the Security Profile.
 Once the SafeBox is created, all attributes are no longer editable.
 
@@ -927,7 +949,7 @@ mark_as_read_delay         | The delay (in seconds) after which the messages are
 remember_key               | Indicates whether the user accepts or not that the participant key is remembered on the client side to allow subsequent accesses to SafeBoxes having Double Encryption enabled.
 default_filter             | The default SafeBox list filter as defined by the user.
 recipient_language         | The language in which the user needs the SafeBox recipients to be notified by email and access the SafeBox on their side.
-secure_link                | The [PersonnalSecureLink](#personalSecureLink) object representing the Personal Secure Link information of the user.
+secure_link                | The [PersonnalSecureLink](#personalsecurelink) object representing the Personal Secure Link information of the user.
 created_at                 | The creation date of the user settings.
 updated_at                 | The last modification date of the user settings.
 

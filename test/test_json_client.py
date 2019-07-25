@@ -1,3 +1,4 @@
+import path
 from sendsecure import *
 import unittest
 try:
@@ -480,7 +481,7 @@ class TestJsonClient(unittest.TestCase):
                                        })
         self.client._do_get = Mock(return_value=expected_response)
         result = json.loads(self.client.search_recipient('john'))
-        self.client._do_get.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/participants/autocomplete?term=john',
+        self.client._do_get.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/recipients/autocomplete?term=john',
                                                        'application/json')
         self.assertEqual(len(result['results']), 3)
 
@@ -761,7 +762,7 @@ class TestJsonClient(unittest.TestCase):
         self.client._do_get = Mock(side_effect=SendSecureException(400, expected_error, ''))
         with self.assertRaises(SendSecureException) as context:
             result = self.client.get_safeboxes(None, { 'status': 'unread', 'search_term': 'test', 'per_page': 1001, 'page': 2 })
-        self.client._do_get.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes.json?status=unread&per_page=1001&search_term=test&page=2',
+        self.client._do_get.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes.json?status=unread&search_term=test&per_page=1001&page=2',
                                                     'application/json')
         self.assertEqual(context.exception.code, 400)
         self.assertIn(expected_error, context.exception.message)
@@ -967,6 +968,56 @@ class TestJsonClient(unittest.TestCase):
         self.assertEqual(context.exception.code, 403)
         self.assertIn('Access denied', context.exception.message)
 
+    def test_archive_safebox_success(self):
+        user_email_json = json.dumps({ 'user_email': 'user@example.com' })
+        expected_response = json.dumps({'result': True, 'message': 'SafeBox successfully archived'})
+        self.client._do_post = Mock(return_value=expected_response)
+        result = json.loads(self.client.archive_safebox(self.safebox_guid, user_email_json))
+        self.client._do_post.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/7a3c51e00a004917a8f5db807180fcc5/tag/archive',
+                                                    'application/json',
+                                                    user_email_json,
+                                                    'application/json')
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'SafeBox successfully archived')
+
+    def test_archive_safebox_error(self):
+        user_email_json = json.dumps({ 'user_email': 'user@example.com' })
+        expected_error = json.dumps({ 'result': False, 'message': 'Unable to add Safebox to Archives' })
+        self.client._do_post = Mock(side_effect=SendSecureException(400, expected_error, ''))
+        with self.assertRaises(SendSecureException) as context:
+            result = self.client.archive_safebox(self.safebox_guid, user_email_json)
+        self.client._do_post.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/7a3c51e00a004917a8f5db807180fcc5/tag/archive',
+                                                    'application/json',
+                                                    user_email_json,
+                                                    'application/json')
+        self.assertEqual(context.exception.code, 400)
+        self.assertIn(expected_error, context.exception.message)
+
+    def test_unarchive_safebox_success(self):
+        user_email_json = json.dumps({ 'user_email': 'user@example.com' })
+        expected_response = json.dumps({'result': True, 'message': 'SafeBox successfully removed from Archives'})
+        self.client._do_post = Mock(return_value=expected_response)
+        result = json.loads(self.client.unarchive_safebox(self.safebox_guid, user_email_json))
+        self.client._do_post.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/7a3c51e00a004917a8f5db807180fcc5/untag/archive',
+                                                    'application/json',
+                                                    user_email_json,
+                                                    'application/json')
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'SafeBox successfully removed from Archives')
+
+    def test_unarchive_safebox_error(self):
+        user_email_json = json.dumps({ 'user_email': 'user@example.com' })
+        expected_error = json.dumps({ 'result': False, 'message': 'Unable to remove Safebox from Archives' })
+        self.client._do_post = Mock(side_effect=SendSecureException(400, expected_error, ''))
+        with self.assertRaises(SendSecureException) as context:
+            result = self.client.unarchive_safebox(self.safebox_guid, user_email_json)
+        self.client._do_post.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/7a3c51e00a004917a8f5db807180fcc5/untag/archive',
+                                                    'application/json',
+                                                    user_email_json,
+                                                    'application/json')
+        self.assertEqual(context.exception.code, 400)
+        self.assertIn(expected_error, context.exception.message)
+
     def test_get_consent_group_messages_success(self):
         expected_response = json.dumps({ 'consent_message_group': {
                                             'id': 1,
@@ -995,6 +1046,39 @@ class TestJsonClient(unittest.TestCase):
                                                     'application/json')
         self.assertEqual(context.exception.code, 404)
         self.assertIn('The requested URL cannot be found.', context.exception.message)
+
+    def test_unfollow(self):
+        expected_response = json.dumps({'result': True, 'message': 'The SafeBox is now unfollowed.'})
+        self.client._do_patch = Mock(return_value=expected_response)
+        result = json.loads(self.client.unfollow('A-Safebox-Guid'))
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'The SafeBox is now unfollowed.')
+
+    def test_unfollow_invalid_safebox_id(self):
+        self.client._do_patch = Mock(side_effect=SendSecureException(404, 'The requested URL cannot be found.', ''))
+        with self.assertRaises(SendSecureException) as context:
+            result = self.client.unfollow('this-safebox-does-not-exist')
+        self.client._do_patch.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/this-safebox-does-not-exist/unfollow',
+                                                        'application/json', '', 'application/json')
+        self.assertEqual(context.exception.code, 404)
+        self.assertIn('The requested URL cannot be found.', context.exception.message)
+
+    def test_follow(self):
+        expected_response = json.dumps({'result': True, 'message': 'The SafeBox is now followed.'})
+        self.client._do_patch = Mock(return_value=expected_response)
+        result = json.loads(self.client.unfollow('A-Safebox-Guid'))
+        self.assertTrue(result['result'])
+        self.assertEqual(result['message'], 'The SafeBox is now followed.')
+
+    def test_follow_invalid_safebox_id(self):
+        self.client._do_patch = Mock(side_effect=SendSecureException(404, 'The requested URL cannot be found.', ''))
+        with self.assertRaises(SendSecureException) as context:
+            result = self.client.follow('this-safebox-does-not-exist')
+        self.client._do_patch.assert_called_once_with('https://awesome.sendsecure.portal/api/v2/safeboxes/this-safebox-does-not-exist/follow',
+                                                        'application/json', '', 'application/json')
+        self.assertEqual(context.exception.code, 404)
+        self.assertIn('The requested URL cannot be found.', context.exception.message)
+
 
 if __name__ == '__main__':
     unittest.main()
